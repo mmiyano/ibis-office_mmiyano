@@ -272,9 +272,12 @@ fn outline_path(path: &GeometryPath, v: &Values, w: f64, h: f64) -> Outline {
                 if subpaths.last().is_none_or(|s| s.closed) {
                     open(&mut subpaths, current);
                 }
-                let (rx, ry) = (v.get(wr) * sx, v.get(hr) * sy);
+                let (rx, ry) = (v.get(wr) * sx, v.get(hr) * sx); // To bypass angle parameter correction, we first render with a 1:1 aspect ratio.
                 let (start, sweep) = (v.get(start), v.get(sweep));
-                let arc = arc_points(current, rx, ry, start, sweep);
+                let mut arc = arc_points(current, rx, ry, start, sweep);
+                for (_x, y) in arc.iter_mut() {
+                    *y = current.1 + (*y - current.1) * sy / sx; // Next, apply the aspect ratio.
+                }
                 if let Some(last) = arc.last() {
                     current = *last;
                 }
